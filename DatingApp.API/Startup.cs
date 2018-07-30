@@ -142,8 +142,8 @@ namespace DatingApp.API
             
             app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
+            app.UseDefaultFiles();//enable to look for default.html index.html
+            app.UseStaticFiles();//wwwwroot
             app.UseMvc(routes => {
                 routes.MapSpaFallbackRoute(
                     name: "spa-fallback",
