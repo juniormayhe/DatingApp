@@ -1,13 +1,14 @@
-import { AuthService } from './../../services/auth.service';
-import { AlertifyService } from '../../services/alertify.service';
-import { UserService } from '../../services/user.service';
+import { AuthService } from './../../_services/auth.service';
 // since this component is nested within a members subfolder,
 // you must add this component manually in app.module.ts
 // add this component to route.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { User } from '../../_models/User';
+import { UserService } from '../../_services/user.service';
+import { AlertifyService } from '../../_services/alertify.service';
 import { ActivatedRoute } from '@angular/router';
-import { NgxGalleryImage, NgxGalleryOptions, NgxGalleryAnimation } from 'ngx-gallery';
+import { NgxGalleryOptions, NgxGalleryImage, NgxGalleryAnimation } from 'ngx-gallery';
+import { TabsetComponent } from 'ngx-bootstrap';
 
 @Component({
   selector: 'app-member-detail',
@@ -15,6 +16,7 @@ import { NgxGalleryImage, NgxGalleryOptions, NgxGalleryAnimation } from 'ngx-gal
   styleUrls: ['./member-detail.component.css']
 })
 export class MemberDetailComponent implements OnInit {
+  @ViewChild('memberTabs') memberTabs: TabsetComponent;
   user: User;
   galleryOptions: NgxGalleryOptions[];
   galleryImages: NgxGalleryImage[];
@@ -33,14 +35,22 @@ export class MemberDetailComponent implements OnInit {
     });
     // this.loadUser();
 
-    this.galleryOptions = [{
+    // get querystring from messages component
+    this.route.queryParams.subscribe(params => {
+      const selectedTab = params['tab'];
+      this.memberTabs.tabs[selectedTab > 0 ? selectedTab : 0].active = true;
+    });
+
+    this.galleryOptions = [
+      {
         width: '500px',
         height: '500px',
         imagePercent: 100,
         thumbnailsColumns: 4,
         imageAnimation: NgxGalleryAnimation.Slide,
         preview: false
-    }];
+      }
+    ];
     this.galleryImages = this.getImages();
   }
 
@@ -59,12 +69,16 @@ export class MemberDetailComponent implements OnInit {
       imageUrls.push({
         small: this.user.photos[i].url,
         medium: this.user.photos[i].url,
-        large: this.user.photos[i].url,
+        big: this.user.photos[i].url,
         description: this.user.photos[i].description
       });
 
     }
     return imageUrls;
+  }
+
+  selectTab(tabId: number) {
+    this.memberTabs.tabs[tabId].active = true;
   }
   /*
   we no longer need to use a this method since resolver loads the data in routes.ts

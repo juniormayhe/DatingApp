@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -14,10 +13,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace DatingApp.API.Controllers
 {
 
-    [ServiceFilter(typeof(LogUserActivity))]// adds action filter to controller
+    [ServiceFilter(typeof(LogUserActivity))]
     [Authorize]
     [Route("api/[controller]")]
-    public class UsersController : Controller
+    [ApiController]
+    public class UsersController : ControllerBase
     {
         private readonly IDatingRepository _repo;
         private readonly IMapper _mapper;
@@ -30,21 +30,24 @@ namespace DatingApp.API.Controllers
 
         // User params could have a hint [FromQuery] to get querystring
         [HttpGet]
-        public async Task<IActionResult> GetUsers(UserParams userParams)
+        public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams)
         {
             //get the user looged in for filtering
             //ClaimTypes.NameIdentifier is the property we use for the ID
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var userFromRepo = await _repo.GetUser(currentUserId);
             userParams.UserId = currentUserId; 
-            if (string.IsNullOrEmpty(userParams.Gender)) {
+            if (string.IsNullOrEmpty(userParams.Gender))
+            {
                 userParams.Gender = userFromRepo.Gender == "male" ? "female": "male";
             }
 
             var users = await _repo.GetUsers(userParams);
             var usersToReturn = _mapper.Map<IEnumerable<UserForListDto>>(users);
             //add Pagination custom header
-            Response.AddPagination(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
+            Response.AddPagination(users.CurrentPage, users.PageSize,
+                users.TotalCount, users.TotalPages);
+
             return Ok(usersToReturn);
         }
 
@@ -55,16 +58,6 @@ namespace DatingApp.API.Controllers
             var user = await _repo.GetUser(id);
             var userToReturn = _mapper.Map<UserForDetailedDto>(user);
             return Ok(userToReturn);
-        }
-
-        [HttpGet("{userId}/alreadyliked/{recipientId}")]
-        public async Task<IActionResult> GetAlreadyLikedUser(int userId, int recipientId)
-        {
-            var like = await _repo.GetLike(userId, recipientId);
-            if (like != null){
-                return Ok(true);
-            }
-            return Ok(false);
         }
         
         //api/users/1
@@ -109,14 +102,12 @@ namespace DatingApp.API.Controllers
                 return Unauthorized();
 
             var like = await _repo.GetLike(userId, recipientId);
-            if (like != null){
-                return BadRequest(new { message = "You already liked this user"});
-            }
+            if (like != null)
+                return BadRequest("You already like this user");
 
             //check if recipient (likee) does not exist
-            if (await _repo.GetUser(recipientId) == null){
+            if (await _repo.GetUser(recipientId) == null)
                 return NotFound();
-            }
 
             like = new Like {
                 LikerId = userId,
@@ -124,11 +115,21 @@ namespace DatingApp.API.Controllers
             };
 
             _repo.Add<Like>(like);
-            if (await _repo.SaveAll()){
-                return Ok();
-            }
-            return BadRequest();
 
+            if (await _repo.SaveAll())
+                return Ok();
+                
+            return BadRequest("Could not like user");
+        }
+
+        [HttpGet("{userId}/alreadyliked/{recipientId}")]
+        public async Task<IActionResult> GetAlreadyLikedUser(int userId, int recipientId)
+        {
+            var like = await _repo.GetLike(userId, recipientId);
+            if (like != null){
+                return Ok(true);
+            }
+            return Ok(false);
         }
     }
 }

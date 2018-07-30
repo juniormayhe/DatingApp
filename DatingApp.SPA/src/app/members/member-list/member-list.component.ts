@@ -1,9 +1,9 @@
-import { PaginationHeader, PaginatedResult } from '../../_models/PaginationHeader';
-import { AlertifyService } from '../../services/alertify.service';
 import { Component, OnInit } from '@angular/core';
 import { User } from '../../_models/User';
-import { UserService } from '../../services/user.service';
+import { UserService } from '../../_services/user.service';
+import { AlertifyService } from '../../_services/alertify.service';
 import { ActivatedRoute } from '@angular/router';
+import { PaginationHeader, PaginatedResult } from '../../_models/PaginationHeader';
 
 @Component({
   selector: 'app-member-list',
@@ -30,31 +30,13 @@ export class MemberListComponent implements OnInit {
        this.paginationHeader = data['users'].paginationHeader;
     });
     // setup filtering
-    console.log('user ngOnInit:', this.user);
+    // console.log('user ngOnInit:', this.user);
     this.userParams.gender = this.user.gender === 'female' ? 'male' : 'female';
     this.userParams.minAge = 18;
     this.userParams.maxAge = 99;
     this.userParams.orderBy = 'lastActive';
     // if you are not using route resolver, uncomment
     // this.loadUsers();
-  }
-
-  loadUsers() {
-    /* if you are not using member list route resolver: in the first load, setup default values
-    if (!this.paginationHeader) {
-      this.paginationHeader = new PaginationHeader();
-      this.paginationHeader.currentPage = 1;
-      this.paginationHeader.itemsPerPage = 5;
-    }*/
-
-    // call user service
-    this.userService.getUsers(this.paginationHeader.currentPage, this.paginationHeader.itemsPerPage, this.userParams)
-      .subscribe((response: PaginatedResult<User[]>) => {
-        this.users = response.result;
-        this.paginationHeader = response.paginationHeader;
-      }, error => {
-        this.alertifyService.error(error);
-      });
   }
 
   pageChanged(event: any): void {
@@ -67,7 +49,6 @@ export class MemberListComponent implements OnInit {
 
   resetFilters() {
         // setup filtering
-        console.log(this.user);
         this.userParams.gender = this.user.gender === 'female' ? 'male' : 'female';
         this.userParams.minAge = 18;
         this.userParams.maxAge = 99;
@@ -86,4 +67,22 @@ export class MemberListComponent implements OnInit {
     });
   }*/
 
+
+  loadUsers() {
+    /* if you are not using member list route resolver: in the first load, setup default values
+    if (!this.paginationHeader) {
+      this.paginationHeader = new PaginationHeader();
+      this.paginationHeader.currentPage = 1;
+      this.paginationHeader.itemsPerPage = 5;
+    }*/
+
+    // call user service
+    this.userService.getUsers(this.paginationHeader.currentPage, this.paginationHeader.itemsPerPage, this.userParams)
+      .subscribe((response: PaginatedResult<User[]>) => {
+        this.users = response.result;
+        this.paginationHeader = response.paginationHeader;
+      }, error => {
+        this.alertifyService.error(error);
+      });
+  }
 }
