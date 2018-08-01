@@ -101,4 +101,32 @@ System.IO.IOException: Authentication failed because the remote party has closed
 - Select Powershell
 - Click on + icon to add powershell terminal
 
+# Deployment
 
+## Create resources at Azure
+
+- SQL server
+- SQL Database
+- App Service plan
+- App Service (setup Application settings, Connection string, Create deployment Credentials and enable Local git at Deployment Center)
+
+## Reset git within DatingApp.API folder
+
+```
+git init
+git add .
+git commit -m 'commit for azure'
+```
+
+## Clone remote git URL
+
+```
+git remote add azure https://youruser@youappservice.scm.azurewebsites.net:443/youappservice.git
+git push azure master
+```
+
+## Visit url address at App Service | Overview
+
+```
+https://yourappservice.azurewebsites.net/
+```
