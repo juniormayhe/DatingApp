@@ -1,12 +1,10 @@
-import { Observable } from 'rxjs/Observable';
-import { AlertifyService } from '../services/alertify.service';
-import { UserService } from '../services/user.service';
-
 import { Injectable } from '@angular/core';
-import { Resolve, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { User } from '../_models/User';
-
-import 'rxjs/add/operator/catch';
+import {Resolve, Router, ActivatedRouteSnapshot} from '@angular/router';
+import { UserService } from '../_services/user.service';
+import { AlertifyService } from '../_services/alertify.service';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 /**Since this is not a component (which is already injectable)
  * we add injectable here.
@@ -18,8 +16,8 @@ import 'rxjs/add/operator/catch';
 */
 @Injectable ()
 export class MemberListResolver implements Resolve<User[]> {
-  pageSize = 5;
   pageNumber = 1;
+    pageSize = 5;
 
   constructor(private userService: UserService,
     private router: Router,
@@ -28,10 +26,12 @@ export class MemberListResolver implements Resolve<User[]> {
 
   // route resolver already subscribe you do not need to subscribe to the observable after getUSer
   resolve(route: ActivatedRouteSnapshot): Observable<User[]> {
-    return this.userService.getUsers(this.pageNumber, this.pageSize).catch(error => {
-      this.alertifyService.error('Problem retrieving data');
+        return this.userService.getUsers(this.pageNumber, this.pageSize).pipe(
+            catchError(error => {
+                this.alertifyService.error('Problem retrieving data');
       this.router.navigate(['/home']);
-      return Observable.of(null);
-    });
+                return of(null);
+            })
+        );
   }
 }

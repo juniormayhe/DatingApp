@@ -18,8 +18,8 @@ namespace DatingApp.API.Helpers
             //an action that was executed
             var resultContext = await next();
 
-            //get id of current user
-            var userId = int.Parse(resultContext.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = int.Parse(resultContext.HttpContext.User
+                .FindFirst(ClaimTypes.NameIdentifier).Value);
             
             //update last active time of user in repo with Dependency injection
             var repo = resultContext.HttpContext.RequestServices.GetService<IDatingRepository>();

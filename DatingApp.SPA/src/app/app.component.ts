@@ -1,6 +1,6 @@
-import { JwtHelper } from 'angular2-jwt';
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from './services/auth.service';
+import { AuthService } from './_services/auth.service';
+import { JwtHelperService } from '@auth0/angular-jwt';
 import { User } from './_models/User';
 
 @Component({
@@ -10,8 +10,8 @@ import { User } from './_models/User';
 })
 // added onInit and ngOnInit to load logged username on every page refresh
 export class AppComponent implements OnInit {
-  title = 'dating app';
-  jwtHelper: JwtHelper = new JwtHelper();
+
+  jwtHelper = new JwtHelperService();
 
   constructor(private authService: AuthService) {}
 
@@ -26,11 +26,7 @@ export class AppComponent implements OnInit {
     // set user using object saved in local storage
     if (user) {
       this.authService.currentUser = user;
-      if (this.authService.currentUser.photoUrl !== null) {
         this.authService.changeMemberPhoto(user.photoUrl);
-      } else {
-        this.authService.changeMemberPhoto(this.authService.DEFAULT_PHOTO);
-      }
     }
   }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DatingApp.API.Models;
 using Newtonsoft.Json;
 
@@ -13,9 +14,11 @@ namespace DatingApp.API.Data
         }
 
         public void SeedUsers(){
-             _context.Users.RemoveRange(_context.Users);
-             _context.SaveChanges();
-
+             //_context.Users.RemoveRange(_context.Users);
+             //_context.SaveChanges();
+            if (_context.Users.Any())
+                return;
+                
             var userData = System.IO.File.ReadAllText("Data/UserSeedData.json");
             //deserialize json to list
             var users = JsonConvert.DeserializeObject<List<User>>(userData);

@@ -1,12 +1,10 @@
-import { AlertifyService } from './../../services/alertify.service';
-import { UserService } from './../../services/user.service';
-import { AuthService } from './../../services/auth.service';
-import { environment } from './../../../environments/environment';
-// this is child component of member-edit component
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Photo } from '../../_models/Photo';
 import { FileUploader } from 'ng2-file-upload';
-import * as _ from 'underscore';
+import { environment } from '../../../environments/environment';
+import { AuthService } from '../../_services/auth.service';
+import { UserService } from '../../_services/user.service';
+import { AlertifyService } from '../../_services/alertify.service';
 
 @Component({
   selector: 'app-photo-editor',
@@ -16,12 +14,12 @@ import * as _ from 'underscore';
 export class PhotoEditorComponent implements OnInit {
 
   @Input() photos: Photo[];
-  public uploader: FileUploader;
+  // output to affect the main photo on Your Profile on parent component (member-edit-component)
+  @Output() getMemberPhotoChange = new EventEmitter<string>();
+  uploader: FileUploader;
   hasBaseDropZoneOver = false;
   baseUrl = environment.apiUrl;
   currentMainPhoto: Photo;
-  // output to affect the main photo on Your Profile on parent component (member-edit-component)
-  @Output() getMemberPhotoChange = new EventEmitter<string>();
 
   constructor(private authService: AuthService,
     private userService: UserService,
@@ -31,7 +29,7 @@ export class PhotoEditorComponent implements OnInit {
     this.initializeUploader();
   }
 
-  public fileOverBase(e: any): void {
+  fileOverBase(e: any): void {
       this.hasBaseDropZoneOver = e;
   }
 
@@ -71,22 +69,25 @@ export class PhotoEditorComponent implements OnInit {
   }
 
   setMainPhoto(newMainPhoto: Photo) {
-    this.userService.setMainPhoto(this.authService.decodedToken.nameid,
-      newMainPhoto.id).subscribe(() => {
-        // after setting main photo in db, use underscore to toggle button color in UI
-        // set currentMainPhoto.isMain = false and the newMainPhoto.isMain=true
-      this.currentMainPhoto = _.findWhere(this.photos, {isMain: true});
+    this.userService.setMainPhoto(this.authService.decodedToken.nameid, newMainPhoto.id).subscribe(() => {
+
+      // after setting main photo in db, use underscore to toggle button color in UI
+      // set currentMainPhoto.isMain = false and the newMainPhoto.isMain=true
+      this.currentMainPhoto = this.photos.filter(p => p.isMain === true)[0];
       this.currentMainPhoto.isMain = false;
       newMainPhoto.isMain = true;
+
       // send new main photo url to parent component (member-edit-component)
       // in member-edit html you must add on app-photo-editor tag:
       // (getMemberPhotoChange)="method_to_call_from_parent_component_member-edit($event)"
       // this.getMemberPhotoChange.emit(newMainPhoto.url); --> replaced by BehaviorSubject
       this.authService.changeMemberPhoto(newMainPhoto.url); // changes BehaviorSubject photoUrl and notify subscribers
-        // keep value after user refreshes page
-        this.authService.currentUser.photoUrl = newMainPhoto.url;
-        // update user object in local storage
-        localStorage.setItem('user', JSON.stringify(this.authService.currentUser));
+
+      // keep value after user refreshes page
+      this.authService.currentUser.photoUrl = newMainPhoto.url;
+
+      // update user object in local storage
+      localStorage.setItem('user', JSON.stringify(this.authService.currentUser));
 
     }, error => {
         this.alertifyService.error(error);
@@ -97,7 +98,7 @@ export class PhotoEditorComponent implements OnInit {
     this.alertifyService.confirm('Are you sure you want to delete this photo?', () => {
       this.userService.deletePhoto(this.authService.decodedToken.nameid, photoId).subscribe(() => {
         // remove selected element from photos array
-        this.photos.splice(_.findIndex(this.photos, { id: photoId }), 1);
+        this.photos.splice(this.photos.findIndex(p => p.id === photoId), 1);
         this.alertifyService.success('Photo has been deleted');
       }, error => {
         this.alertifyService.error('Failed to delete photo');
