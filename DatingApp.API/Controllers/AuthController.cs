@@ -14,18 +14,17 @@ using Microsoft.IdentityModel.Tokens;
 namespace DatingApp.API.Controllers
 {
     [Route("api/[controller]")]
-    public class AuthController : Controller
+    [ApiController]
+    public class AuthController : ControllerBase
     {
-        private readonly IMapper _mapper;
-        private readonly IAuthRepository _authRepository;
+        private readonly IAuthRepository _repo;
         private readonly IConfiguration _config;
-        public AuthController(IAuthRepository authRepository, 
-                            IConfiguration config,
-                            IMapper mapper)
+        private readonly IMapper _mapper;
+        public AuthController(IAuthRepository repo, IConfiguration config, IMapper mapper)
         {
-            this._config = config;
-            this._authRepository = authRepository;
-            this._mapper = mapper;
+            _mapper = mapper;
+            _config = config;
+            _repo = repo;
         }
 
         [HttpPost("register")]
@@ -34,7 +33,7 @@ namespace DatingApp.API.Controllers
             if (!string.IsNullOrEmpty(userForRegisterDto.Username))
                 userForRegisterDto.Username = userForRegisterDto.Username.ToLower();
             
-            if (await _authRepository.UserExists(userForRegisterDto.Username))
+            if (await _repo.UserExists(userForRegisterDto.Username))
                 ModelState.AddModelError("Username", "Username already exists");
 
             //validate request
@@ -50,7 +49,7 @@ namespace DatingApp.API.Controllers
             // };
             var userToCreate = _mapper.Map<User>(userForRegisterDto);
 
-            var createdUser = await _authRepository.Register(userToCreate, userForRegisterDto.Password);
+            var createdUser = await _repo.Register(userToCreate, userForRegisterDto.Password);
             
             //return the created user filtered without the password to client
             var userToReturn = _mapper.Map<UserForDetailedDto>(createdUser);
@@ -69,34 +68,43 @@ namespace DatingApp.API.Controllers
                return BadRequest(ModelState);
            }
 
-            var userFromRepo = await _authRepository.Login(userForLoginDto.Username.ToLower(), userForLoginDto.Password);
+            var userFromRepo = await _repo.Login(userForLoginDto.Username.ToLower(), userForLoginDto.Password);
 
             if (userFromRepo == null)
                  return Unauthorized();
 
             //generate token for user
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_config["AppSettings:Token"]);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            var claims = new[]
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
-                    new Claim(ClaimTypes.Name, userFromRepo.Username)
-                }),
-                //Audience="", if were to Validate Audience, set it here and set ValidateAudience=True in Startup.cs
-                //Issuer = "", if were to Validate Issuer, set it here and set ValidateIssuer=True in Startup.cs
-                Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
+                new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
+                new Claim(ClaimTypes.Name, userFromRepo.Username)
             };
 
+            var key = new SymmetricSecurityKey(Encoding.UTF8
+                .GetBytes(_config.GetSection("AppSettings:Token").Value));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
+
             
             //filter properties without password and photos
             var filteredUser = _mapper.Map<UserForListDto>(userFromRepo);
 
-            return Ok(new { tokenString, filteredUser });//return createdatroute tells where the resource was created
+                        return Ok(new
+            {
+                token = tokenHandler.WriteToken(token),
+                user = filteredUser
+            });
         }
     }
 }

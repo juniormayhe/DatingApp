@@ -1,11 +1,10 @@
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { AlertifyService } from './../services/alertify.service';
-import { ActivatedRoute } from '@angular/router';
-import { UserService } from './../services/user.service';
-import { AuthService } from './../services/auth.service';
-import { PaginationHeader, PaginatedResult } from './../_models/PaginationHeader';
 import { Component, OnInit } from '@angular/core';
 import { User } from '../_models/User';
+import { PaginationHeader, PaginatedResult } from '../_models/PaginationHeader';
+import { AuthService } from '../_services/auth.service';
+import { UserService } from '../_services/user.service';
+import { ActivatedRoute } from '../../../node_modules/@angular/router';
+import { AlertifyService } from '../_services/alertify.service';
 
 @Component({
   selector: 'app-lists',
@@ -29,8 +28,8 @@ private alertifyService: AlertifyService) { }
       // preloaded users from ListsResolver
       this.users = data['users'].result;
       this.paginationHeader = data['users'].paginationHeader;
-      this.likesParam = 'Likers';
     });
+    this.likesParam = 'Likers';
   }
 
   loadUsers() {

@@ -1,40 +1,17 @@
-.panel-body {
-  padding: 5px
+.card:hover img {
+    transform: scale(1.2, 1.2);
+  transition-duration: 500ms;
+  transition-timing-function: ease-out;
+    opacity: 0.7;
 }
 
-.panel-body img {
-  width: 100%
-}
-
-h5 {
-  font-size: 100%;
-  font-weight: 700;
-  color: #3a3c41;
-  margin-top: 1px;
-  margin-bottom: 1px;
-
-}
-
-h5 small {
-  font-weight: bold;
-  font-size: 12px;
-  font-style: italic
-}
-
-img {
-  transform: scale(1,1);
+.card img {
+    transform: scale(1.0, 1.0);
   transition-duration: 500ms;
   transition-timing-function: ease-out;
 }
 
-.panel:hover img {
-  transform: scale(1.2, 1.2);
-  transition-duration: 500ms;
-  transition-timing-function: ease-out;
-  opacity: 0.7;
-}
-
-.panel-image {
+.card-img-wrapper {
   overflow: hidden;
   position: relative;
 }
@@ -49,19 +26,11 @@ img {
   opacity: 0;
 }
 
-.panel:hover .member-icons {
+.card-img-wrapper:hover .member-icons {
   bottom: 0;
   opacity: 1;
 }
 
 .animate {
   transition: all 0.3s ease-in-out;
-}
-
-@media (max-width: 768px){
-  .btn {
-    padding: 2px 4px;
-    font-size: 80%;
-    line-height: 1;
-  }
 }

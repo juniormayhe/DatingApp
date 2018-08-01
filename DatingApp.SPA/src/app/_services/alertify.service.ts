@@ -2,7 +2,9 @@ import { Injectable } from '@angular/core';
 
 declare let alertify: any; // a global block-scoped variable
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class AlertifyService {
   // AlertifyService must be added in app.module.ts
 

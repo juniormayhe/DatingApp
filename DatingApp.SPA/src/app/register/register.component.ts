@@ -1,12 +1,10 @@
-import { Router } from '@angular/router';
-import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
-
-import { AuthService } from '../services/auth.service';
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { AlertifyService } from '../services/alertify.service';
+import { AuthService } from '../_services/auth.service';
+import { AlertifyService } from '../_services/alertify.service';
 import { FormGroup, FormControl, Validators, FormBuilder } from '@angular/forms';
+import { BsDatepickerConfig } from 'ngx-bootstrap';
 import { User } from '../_models/User';
-
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -17,10 +15,11 @@ export class RegisterComponent implements OnInit {
   @Output() cancelRegister = new EventEmitter();
 
   user: User;
-  // add a configuration for ngx Datepicker
-  bsConfig: Partial<BsDatepickerConfig>;
   // add reactive forms in app.module
   registerForm: FormGroup;
+  // add a configuration for ngx Datepicker
+  bsConfig: Partial<BsDatepickerConfig>;
+
 
   constructor(private authService: AuthService,
     private alertifyService: AlertifyService,
