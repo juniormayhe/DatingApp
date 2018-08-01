@@ -33,20 +33,24 @@ namespace DatingApp.API
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        // mySQL Production database. This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // services.AddDbContext<DataContext>(x => x.
-            //     UseMySql(Configuration.GetConnectionString("DefaultConnection"))
-            //         .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.IncludeIgnoredWarning)));
-            
-            services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            // We have a CountAsync method which returns int but expected type was User
+            // so tell to ignore supress warnings of Include(Photos). 
+            services.AddDbContext<DataContext>(x => 
+                x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.IncludeIgnoredWarning)));
             
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(opt => {
                     opt.SerializerSettings.ReferenceLoopHandling = 
                         Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
+            
+            // create a database if does not exist in azure, apply any pending migrations to database
+            services.BuildServiceProvider().GetService<DataContext>().Database.Migrate();
+            
             services.AddCors();
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             services.AddAutoMapper();
@@ -67,6 +71,7 @@ namespace DatingApp.API
             services.AddScoped<LogUserActivity>();
         }
 
+        // Development database
         public void ConfigureDevelopmentServices(IServiceCollection services)
         {
             //datacontext must be injected in other parts of this app.
@@ -125,7 +130,7 @@ namespace DatingApp.API
 			
 
             // load new users, uncomment this if you want to reseed database
-            //seeder.SeedUsers();
+            seeder.SeedUsers();
 
 			//We don’t need the AllowCredentials as this is a setting to allow cookie authentication to be
 			//sent to the server, we are not using this type of authentication.
